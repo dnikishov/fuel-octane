@@ -16,7 +16,7 @@ class octane_tasks::upgrade_ceph_packages {
   if ! ceph_equal_versions($ceph_mon_versions, $ceph_osd_versions) {
 
     exec { 'upgrade-ceph-packages':
-      command => "ceph-deploy install --release ${ceph_release} ${ceph_hostnames_string}",
+      command => "ceph-deploy install --release ${ceph_release} ${node_hostnames_string}",
     }
 
   } else {

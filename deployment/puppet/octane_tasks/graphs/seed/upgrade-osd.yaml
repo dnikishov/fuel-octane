@@ -16,11 +16,24 @@
     dst: /etc/fuel/octane/
     timeout: 180
 
+- id: ceph_osd_hiera
+  type: upload_file
+  version: 2.1.0
+  groups: [primary-controller]
+  requires: []
+  required_for: []
+  parameters:
+    path: /etc/hiera/override/common.yaml
+    data:
+      yaql_exp: >
+        ({"ceph_upgrade_release" => $.ceph_upgrade_release,
+          "ceph_upgrade_hostnames" => $.ceph_upgrade_hostnames}.toYaml())
+
 - id: set_noout
   type: puppet
   version: 2.1.0
   groups: [primary-controller]
-  requires: [rsync_octane]
+  requires: [rsync_octane, ceph_osd_hiera]
   required_for: []
   parameters:
     puppet_manifest: /etc/fuel/octane/puppet/octane_tasks/modular/set_noout.pp
@@ -35,5 +48,15 @@
   required_for: []
   parameters:
     puppet_manifest: /etc/fuel/octane/puppet/octane_tasks/modular/upgrade_ceph_packages.pp
-    puppet_modules: /etc/fuel/octane/puppet
+    puppet_modules: /etc/fuel/octane/puppet:/etc/puppet/modules
     timeout: 600
+
+- id: remove_hiera_override
+  type: shell
+  version: 2.1.0
+  groups: [primary-controller]
+  requires: [upgrade_ceph_packages]
+  required_for: []
+  parameters:
+    cmd: rm /etc/hiera/override/common.yaml || true
+    timeout: 60

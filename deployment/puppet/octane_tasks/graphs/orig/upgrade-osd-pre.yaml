@@ -19,7 +19,7 @@
 - id: remove_hiera_section_repo_setup
   type: shell
   version: 2.1.0
-  groups: [compute]
+  groups: [ceph-osd]
   requires: [rsync_octane]
   required_for: []
   parameters:
@@ -36,8 +36,7 @@
     path: /etc/hiera/override/common.yaml
     data:
       yaql_exp: >
-        ({"repo_setup" => {"repos" => $.repo_setup.upgrade_osd},
-          "ceph_upgrade_release" => $.ceph_upgrade_release}.toYaml())
+        ({"repo_setup" => {"repos" => $.repo_setup.upgrade_osd}}.toYaml())
 
 - id: cleanup_existing_repos
   type: shell
