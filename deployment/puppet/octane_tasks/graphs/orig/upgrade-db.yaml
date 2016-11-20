@@ -90,7 +90,7 @@
   requires: [mysqldump_upload_to_master]
   required_for: []
   parameters:
-    cmd: /etc/fuel/octane/puppet/octane_tasks/files/store_current_host.sh /tmp/cinder_current_host
+    cmd: bash /etc/fuel/octane/puppet/octane_tasks/files/store_current_host.sh /tmp/cinder_current_host
     timeout: 60
 
 - id: cinder_current_host_upload_to_master
