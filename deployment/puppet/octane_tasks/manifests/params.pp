@@ -49,12 +49,21 @@ class octane_tasks::params (
 
   # Cinder
   if $cinder_vol_on_ctrl {
-    $cinder_services_list = [
-      'cinder-api',
-      'cinder-scheduler',
-      'cinder-volume',
-      'cinder-backup'
-    ]
+    if $fuel_version >= '6.1' {
+      $cinder_services_list = [
+        'cinder-api',
+        'cinder-scheduler',
+        'cinder-volume',
+        'cinder-backup'
+      ]
+    } else {
+      $cinder_services_list = [
+        'cinder-api',
+        'cinder-scheduler',
+        'cinder-volume',
+      ]
+
+    }
   } else {
     $cinder_services_list = [
       'cinder-api',

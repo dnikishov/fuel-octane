@@ -108,7 +108,7 @@ def upgrade_control_plane_with_graph(orig_id, seed_id):
         # Decommission the orig controllers by stopping OpenStack services
         deploy.execute_graph_and_wait('switch-control-2', orig_id)
     except Exception:
-        LOG.info('Trying to rollback switch-control phase')
+        LOG.exception('Trying to rollback switch-control phase due to error')
 
         # Cut off the seed controller from networks
         roles = ['primary-controller', 'controller']
