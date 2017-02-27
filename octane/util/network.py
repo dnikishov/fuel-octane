@@ -261,7 +261,10 @@ def delete_patch_ports(node, host_config):
         delete_port_cmd = delete_port_providers[provider]
         cmds = delete_port_cmd(bridge, port)
         for cmd in cmds:
-            ssh.call(cmd, node=node)
+            try:
+                ssh.call(cmd, node=node)
+            except Exception as e:
+                LOG.warn("Exception occured, skipping")
 
 
 def create_port_ovs(bridge, port):
