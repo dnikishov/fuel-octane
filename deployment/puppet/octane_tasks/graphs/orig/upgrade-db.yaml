@@ -34,6 +34,8 @@
   groups: [primary-controller]
   requires: [rsync_octane, add_hiera_override]
   required_for: []
+  condition:
+    yaql_exp: "$.upgrade.relation_info.orig_cluster_version =~ '7\\.0'"
   parameters:
     puppet_manifest: /etc/fuel/octane/puppet/octane_tasks/modular/nova_db_migrate_flavor_data_70.pp
     puppet_modules:  /etc/fuel/octane/puppet:/etc/puppet/modules
@@ -89,6 +91,8 @@
   groups: [primary-controller]
   requires: [mysqldump_upload_to_master]
   required_for: []
+  condition:
+    yaql_exp: "$.upgrade.relation_info.orig_cluster_version =~ '[6-7]\\.[0-1]'"
   parameters:
     cmd: bash /etc/fuel/octane/puppet/octane_tasks/files/store_current_host.sh /tmp/cinder_current_host
     timeout: 60
@@ -99,6 +103,8 @@
   groups: [primary-controller]
   requires: [store_cinder_current_host]
   required_for: []
+  condition:
+    yaql_exp: "$.upgrade.relation_info.orig_cluster_version =~ '[6-7]\\.[0-1]'"
   parameters:
     src: /tmp/cinder_current_host
     dst: rsync://{MASTER_IP}:/octane_data/

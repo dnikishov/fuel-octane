@@ -122,7 +122,7 @@
   requires: []
   required_for: []
   condition:
-    yaql_exp: "$.upgrade.relation_info.orig_cluster_version =~ '7\\.0'"
+    yaql_exp: "$.upgrade.relation_info.orig_cluster_version =~ '[6-7]\\.[0-1]'"
   parameters:
     src: rsync://{MASTER_IP}:/octane_data/cinder_current_host
     dst: /tmp
@@ -135,7 +135,7 @@
   requires: []
   required_for: []
   condition:
-    yaql_exp: "$.upgrade.relation_info.orig_cluster_version =~ '7\\.0'"
+    yaql_exp: "$.upgrade.relation_info.orig_cluster_version =~ '[6-7]\\.[0-1]'"
   parameters:
     cmd: bash /etc/fuel/octane/puppet/octane_tasks/files/store_new_host.sh /tmp/cinder_new_host
     timeout: 60
@@ -147,7 +147,7 @@
   requires: [db_sync, cinder_current_host_download_from_master, store_cinder_new_host]
   required_for: []
   condition:
-    yaql_exp: "$.upgrade.relation_info.orig_cluster_version =~ '7\\.0'"
+    yaql_exp: "$.upgrade.relation_info.orig_cluster_version =~ '[6-7]\\.[0-1]'"
   parameters:
     cmd: 'source /tmp/cinder_current_host; source /tmp/cinder_new_host; cinder-manage volume update_host --currenthost ${CURRENT_HOST} --newhost ${NEW_HOST}'
     timeout: 60
