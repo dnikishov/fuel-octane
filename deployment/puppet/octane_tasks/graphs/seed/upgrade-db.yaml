@@ -79,11 +79,143 @@
     puppet_modules:  /etc/fuel/octane/puppet:/etc/puppet/modules
     timeout: 360
 
+- id: fetch_kilo_code
+  type: shell
+  version: 2.1.0
+  role: [primary-controller]
+  requires: [mysqldump_restore]
+  required_for: []
+  condition:
+    yaql_exp: "$.upgrade.relation_info.orig_cluster_version =~ '6\\.[0-1]'"
+  parameters:
+    cmd: |
+      mkdir -p /tmp/os-kilo/;
+      cd /tmp/os-kilo;
+      wget https://github.com/openstack/keystone/archive/2015.1.4.tar.gz -O keystone-2015.1.4.tar.gz;
+      wget https://github.com/openstack/nova/archive/2015.1.4.tar.gz -O nova-2015.1.4.tar.gz;
+      wget https://github.com/openstack/neutron/archive/2015.1.4.tar.gz -O neutron-2015.1.4.tar.gz;
+      wget https://github.com/openstack/murano/archive/2015.1.1.tar.gz -O murano-2015.1.1.tar.gz;
+      tar xf keystone-2015.1.4.tar.gz;
+      tar xf nova-2015.1.4.tar.gz;
+      tar xf neutron-2015.1.4.tar.gz;
+      tar xf murano-2015.1.1.tar.gz;
+      sed -i '/from nova import ipv6/d' nova-2015.1.4/nova/network/manager.py;
+      sed -i 's/op.add_column.*/pass/' murano-2015.1.1/murano/db/migration/alembic_migrations/versions/006_add_task_result.py;
+    timeout: 1200
+
+
+- id: prepare_venv_1
+  type: shell
+  version: 2.1.0
+  role: [primary-controller]
+  requires: [fetch_kilo_code]
+  required_for: []
+  condition:
+    yaql_exp: "$.upgrade.relation_info.orig_cluster_version =~ '6\\.[0-1]'"
+  parameters:
+    cmd: |
+      cd /tmp/os-kilo;
+      apt-get -o Dpkg::Options::="--force-overwrite" install -y --force-yes python-dev python-pip python-setuptools python-virtualenv=1.11.4-1ubuntu1 libffi-dev libssl-dev;
+    timeout: 180
+
+
+- id: prepare_venv_2
+  type: shell
+  version: 2.1.0
+  role: [primary-controller]
+  requires: [prepare_venv_1]
+  required_for: []
+  condition:
+    yaql_exp: "$.upgrade.relation_info.orig_cluster_version =~ '6\\.[0-1]'"
+  parameters:
+    cmd: |
+      cd /tmp/os-kilo;
+      virtualenv venv --system-site-packages;
+    timeout: 180
+
+
+- id: install_kilo_code
+  type: shell
+  version: 2.1.0
+  role: [primary-controller]
+  requires: [prepare_venv_2]
+  required_for: []
+  condition:
+    yaql_exp: "$.upgrade.relation_info.orig_cluster_version =~ '6\\.[0-1]'"
+  parameters:
+    cmd: |
+      cd /tmp/os-kilo &&
+      source venv/bin/activate &&
+      pip install testrepository functools32 kombu==3.0.33 &&
+      pip install -r keystone-2015.1.4/requirements.txt &&
+      pip install -r nova-2015.1.4/requirements.txt &&
+      pip install -r neutron-2015.1.4/requirements.txt &&
+      pip install -r murano-2015.1.1/requirements.txt
+
+
+- id: keystone_dbsync
+  type: shell
+  version: 2.1.0
+  role: [primary-controller]
+  requires: [install_kilo_code]
+  required_for: []
+  condition:
+    yaql_exp: "$.upgrade.relation_info.orig_cluster_version =~ '6\\.[0-1]'"
+  parameters:
+    cmd: |
+      export PYTHONPATH=/tmp/os-kilo/keystone-2015.1.4/:/tmp/os-kilo/venv/lib/python2.7/site-packages/;
+      /tmp/os-kilo/keystone-2015.1.4/bin/keystone-manage db_sync
+
+
+- id: nova_dbsync
+  type: shell
+  version: 2.1.0
+  role: [primary-controller]
+  requires: [install_kilo_code]
+  required_for: []
+  condition:
+    yaql_exp: "$.upgrade.relation_info.orig_cluster_version =~ '6\\.[0-1]'"
+  parameters:
+    cmd: |
+      export PYTHONPATH=/tmp/os-kilo/nova-2015.1.4/:/tmp/os-kilo/venv/lib/python2.7/site-packages/;
+      nova-manage db sync &&
+      nova-manage db migrate_flavor_data
+
+
+- id: neutron_dbsync
+  type: shell
+  version: 2.1.0
+  role: [primary-controller]
+  requires: [install_kilo_code]
+  required_for: []
+  condition:
+    yaql_exp: "$.upgrade.relation_info.orig_cluster_version =~ '6\\.[0-1]'"
+  parameters:
+    cmd: |
+      export PYTHONPATH=/tmp/os-kilo/neutron-2015.1.4/:/tmp/os-kilo/venv/lib/python2.7/site-packages/;
+      neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugin.ini upgrade head;
+
+
+# Untested
+- id: murano_dbsync
+  type: shell
+  version: 2.1.0
+  role: [primary-controller]
+  requires: [install_kilo_code]
+  required_for: []
+  condition:
+    yaql_exp: "$.murano.enabled and $.upgrade.relation_info.orig_cluster_version =~ '6\\.[0-1]'"
+  parameters:
+    cmd: |
+      export PYTHONPATH=/tmp/os-kilo/keystone-2015.1.4/:/tmp/os-kilo/venv/lib/python2.7/site-packages/;
+      murano-db-manage --config-file /etc/murano/murano.conf upgrade
+
+
 - id: db_sync
   type: puppet
   version: 2.1.0
   groups: [primary-controller]
-  requires: [rsync_octane, mysqldump_restore]
+  requires: [rsync_octane, mysqldump_restore, murano_dbsync, keystone_dbsync, nova_dbsync, neutron_dbsync]
   required_for: []
   parameters:
     puppet_manifest: /etc/fuel/octane/puppet/octane_tasks/modular/db_sync.pp
