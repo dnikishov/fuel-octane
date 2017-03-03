@@ -79,14 +79,22 @@ class octane_tasks::params (
 
   # Murano
   if $murano_enabled or $murano_plugin_enabled {
-    $murano_services_list = ['murano-api', 'murano-engine']
+    if $fuel_version > '6.0' {
+      $murano_services_list = ['murano-api', 'murano-engine']
+    } else {
+      $murano_services_list = ['openstack-murano-api', 'openstack-murano-engine']
+    }
   } else {
     $murano_services_list = []
   }
 
   # Sahara
   if $sahara_enabled {
-    $sahara_services_list = ['sahara-all', 'sahara-engine']
+    if $fuel_version > '6.0' {
+      $sahara_services_list = ['sahara-api', 'sahara-engine']
+    } else {
+      $sahara_services_list = ['sahara-all']
+    }
   } else {
     $sahara_services_list = []
   }
