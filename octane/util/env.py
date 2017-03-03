@@ -179,9 +179,7 @@ def wait_for_nodes(nodes, status, timeout=60 * 60, check_freq=60):
 
 def move_nodes(env, nodes, provision=True, roles=None):
     env_id = env.data['id']
-    cmd = ["move", "node"]
-    if not provision:
-        cmd += ['--no-provision']
+    cmd = ["move", "node", '--no-provision']
     if roles:
         cmd += ['--roles', ','.join(roles)]
     cmd.append(str(env_id))
@@ -191,9 +189,11 @@ def move_nodes(env, nodes, provision=True, roles=None):
         if provision and incompatible_provision_method(env):
             disk.create_configdrive_partition(node)
     fuel2_env_call(cmd)
+    raw_input("Octane is about to start to provision nodes. "
+              "Make necessary changes to disk and interface "
+              "configuration and press any key to continue...")
     if provision:
-        LOG.info("Nodes provision started. Please wait...")
-        wait_for_nodes(nodes, "provisioned")
+        provision_nodes(env, nodes)
 
 
 def copy_vips(env):
