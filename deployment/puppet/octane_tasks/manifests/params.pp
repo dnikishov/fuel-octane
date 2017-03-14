@@ -43,9 +43,16 @@ class octane_tasks::params (
   }
 
   # Neutron
-  $neutron_services_list = [
-    'neutron-server',
-  ]
+  if $fuel_version >= '9.0' {
+    $neutron_services_list = [
+      'neutron-server',
+      'neutron-openvswitch-agent',
+    ]
+  } else {
+    $neutron_services_list = [
+      'neutron-server',
+    ]
+  }
 
   # Cinder
   if $cinder_vol_on_ctrl {
@@ -108,9 +115,8 @@ class octane_tasks::params (
   }
 
   # Pacemaker services
-  if $fuel_version != '9.0' {
+  if $fuel_version >= '9.0' {
     $cluster_services_list = [
-      'neutron-openvswitch-agent',
       'neutron-l3-agent',
       'neutron-metadata-agent',
       'neutron-dhcp-agent',
@@ -118,6 +124,7 @@ class octane_tasks::params (
     ]
   } else {
     $cluster_services_list = [
+      'neutron-openvswitch-agent',
       'neutron-l3-agent',
       'neutron-metadata-agent',
       'neutron-dhcp-agent',
