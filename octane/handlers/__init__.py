@@ -44,8 +44,8 @@ class _GetNodesHandlersFactory(object):
                 try:
                     cls = self.extensions[role]
                 except KeyError:
-                    raise Exception("Role '%s' of node #%s is not supported" %
-                                    (role, node.data['id']))
+                    LOG.warn("Role '%s' of node #%s is not supported" %
+                             (role, node.data['id']))
                 else:
                     handlers.append(cls(node, *args, **kwargs))
         return functools.partial(self.call_method_on_all, handlers)

@@ -43,7 +43,7 @@
     cmd: >
       . /root/openrc;
       cd /etc/fuel/octane/puppet/octane_tasks/misc/;
-      python delete_fuel_resources.py
+      python delete_fuel_resources.py || true
     timeout: 180
 
 - id: stop_controller_services

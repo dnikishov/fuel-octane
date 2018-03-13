@@ -78,7 +78,7 @@ class octane_tasks::params (
 
   # Sahara
   if $sahara_enabled {
-    $sahara_services_list = ['sahara-all']
+    $sahara_services_list = ['sahara-all', 'sahara-engine']
   } else {
     $sahara_services_list = []
   }
@@ -92,13 +92,22 @@ class octane_tasks::params (
   }
 
   # Pacemaker services
-  $cluster_services_list = [
-    'neutron-openvswitch-agent',
-    'neutron-l3-agent',
-    'neutron-metadata-agent',
-    'neutron-dhcp-agent',
-    'p_heat-engine',
-  ]
+  if $fuel_version != '9.0' {
+    $cluster_services_list = [
+      'neutron-openvswitch-agent',
+      'neutron-l3-agent',
+      'neutron-metadata-agent',
+      'neutron-dhcp-agent',
+      'p_heat-engine',
+    ]
+  } else {
+    $cluster_services_list = [
+      'neutron-l3-agent',
+      'neutron-metadata-agent',
+      'neutron-dhcp-agent',
+      'p_heat-engine',
+    ]
+  }
 
   # Concatenate init services
   $init_services_list = concat(

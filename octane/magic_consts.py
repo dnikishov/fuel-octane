@@ -99,7 +99,7 @@ KEYSTONE_PIPELINES = [
 
 SKIP_CONTROLLER_TASKS = [
     "upload_cirros", "ceph_ready_check", "configure_default_route",
-    "enable_rados",
+    "enable_rados", "ceilometer-radosgw-user", "upload_murano_package"
 ]
 
 COMPUTE_PREUPGRADE_PACKAGES = {
