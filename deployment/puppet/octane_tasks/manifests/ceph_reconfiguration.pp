@@ -30,14 +30,16 @@ class octane_tasks::ceph_reconfiguration {
     require => Exec['delete_old_mon_db'],
   }
 
-  exec { 'delete_sysvinit_file':
-    command => "rm -f /var/lib/ceph/mon/ceph-${::hostname}/sysvinit || true",
-    require => Exec['extract_db'],
-  }
+  if $octane_tasks::params::orig_version =~ /6\.[01]/ {
+    exec { 'delete_sysvinit_file':
+      command => "rm -f /var/lib/ceph/mon/ceph-${::hostname}/sysvinit || true",
+      require => Exec['extract_db'],
+    }
 
-  exec { 'create_upstart_file':
-    command => "touch /var/lib/ceph/mon/ceph-${::hostname}/upstart || true",
-    require => Exec['extract_db'],
+    exec { 'create_upstart_file':
+      command => "touch /var/lib/ceph/mon/ceph-${::hostname}/upstart || true",
+      require => Exec['extract_db'],
+    }
   }
 
   exec { 'extract_ceph_etc':
